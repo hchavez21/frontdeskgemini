@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Front Desk Communication Log</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f3f4f6;
+            transition: all 0.3s ease-in-out;
+        }
+
+        :root {
+            --primary-blue: #003C71;
+            --accent-blue: #0A66C2;
+            --warning-red: #D91E2A;
+            --success-green: #10B981;
+        }
+        
+        .bg-primary-blue { background-color: var(--primary-blue); }
+        .text-primary-blue { color: var(--primary-blue); }
+        .border-primary-blue { border-color: var(--primary-blue); }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: white;
+            flex-shrink: 0;
+        }
+        .stat-text h3 {
+            font-size: 1rem;
+            color: #4B5563;
+        }
+        .stat-text p {
+            font-size: 2.5rem;
+            font-weight: bold;
+            line-height: 1;
+            margin-top: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #0858A8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .quick-action-btn {
+            background-color: white;
+            border: 2px solid #E5E7EB;
+            color: var(--primary-blue);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .quick-action-btn:hover {
+            border-color: var(--accent-blue);
+            background-color: var(--accent-blue);
+            color: white;
+        }
+        .log-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .log-card:hover {
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .status-new { background-color: #FEE2E2; color: #DC2626; }
+        .status-in_progress { background-color: #FEF3C7; color: #D97706; }
+        .status-resolved { background-color: #DCFCE7; color: #16A34A; }
+        
+        .cheatsheet-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .cheatsheet-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+            z-index: 1000;
+        }
+        .modal-overlay.open {
+            opacity: 1; visibility: visible;
+        }
+        .modal-content {
+            background: white; border-radius: 1rem; padding: 2rem;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            width: 90%; max-width: 500px;
+            transform: translateY(-20px); transition: transform 0.3s;
+        }
+        .modal-overlay.open .modal-content {
+            transform: translateY(0);
+        }
+
+        /* Sidebar & Layout */
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5); z-index: 40;
+            opacity: 0; transition: opacity 0.3s ease-in-out; pointer-events: none;
+        }
+        .sidebar-overlay.active {
+            opacity: 1; pointer-events: auto;
+        }
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        .nav-link.active {
+            background-color: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .floor-plan-btn.active {
+            background-color: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800 bg-gray-100">
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-white w-64 h-full fixed top-0 left-0 z-50 transform -translate-x-full p-4 flex flex-col shadow-lg md:relative md:translate-x-0">
+        <div class="flex items-center gap-2 pb-4 border-b">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Hampton_by_Hilton_logo.svg/2560px-Hampton_by_Hilton_logo.svg.png" alt="Hampton by Hilton Logo" class="h-8">
+            <h2 class="font-bold text-xl">Front Desk</h2>
+        </div>
+        <nav class="mt-8 flex-grow">
+            <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-200" data-view="dashboard">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 mt-2 rounded-lg text-gray-700 hover:bg-gray-200" data-view="interactions">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>Interactions</span>
+            </a>
+            <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 mt-2 rounded-lg text-gray-700 hover:bg-gray-200" data-view="guests">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Guests</span>
+            </a>
+            <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 mt-2 rounded-lg text-gray-700 hover:bg-gray-200" data-view="messages">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <span>Messages</span>
+            </a>
+            <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 mt-2 rounded-lg text-gray-700 hover:bg-gray-200" data-view="floor-plans">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-10-2h4" />
+                </svg>
+                <span>Floor Plans</span>
+            </a>
+            <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 mt-2 rounded-lg text-gray-700 hover:bg-gray-200" data-view="cheat-sheet">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13.004m0-13.004c-3.111-1.036-6.195 2.126-6.195 2.126a6.195 6.195 0 000 13.004s3.084 3.162 6.195 2.126M12 6.253a6.195 6.195 0 016.195-2.126c0 0 3.084-3.162 6.195-2.126s-6.195-2.126-6.195-2.126a6.195 6.195 0 01-6.195 2.126z"/>
+                </svg>
+                <span>Cheat Sheet</span>
+            </a>
+        </nav>
+        <div id="user-info" class="text-center p-2 bg-gray-100 rounded-lg">
+            <p class="text-xs text-gray-600">Logged in as: HUGO CHAVEZ</p>
+            <p id="userIdDisplay" class="text-xs text-gray-400 break-all"></p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div id="app" class="min-h-screen p-4 sm:p-6 md:p-8 md:ml-64">
+        <header class="bg-white shadow-md rounded-xl p-4 mb-8 flex justify-between items-center">
+            <button id="menu-toggle" class="p-2 rounded-md hover:bg-gray-200 md:hidden" onclick="toggleSidebar()">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <h1 id="header-title" class="text-xl sm:text-2xl font-bold text-gray-800">Dashboard</h1>
+            <div class="bg-primary-blue text-white px-3 py-1 rounded-full text-sm">Demo Mode</div>
+        </header>
+
+        <main>
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view">
+                <div class="bg-primary-blue text-white p-6 rounded-xl mb-8">
+                    <h2 class="text-3xl font-bold">Welcome, HUGO CHAVEZ!</h2>
+                    <p class="mt-1">This is a demonstration of the Front Desk Communication Log system.</p>
+                </div>
+                
+                <div class="mb-8 flex flex-col sm:flex-row items-center justify-center gap-4 bg-white p-4 rounded-xl shadow-sm">
+                    <button id="prevDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg">
+                        ← Previous
+                    </button>
+                    <div class="text-center">
+                        <h2 id="currentDate" class="text-xl font-bold"></h2>
+                        <button id="goToTodayBtn" class="text-sm text-primary-blue hover:underline">
+                            Go to Today
+                        </button>
+                    </div>
+                    <button id="nextDayBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg">
+                        Next →
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-blue-500">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="stat-text">
+                            <h3>Total Interactions</h3>
+                            <p id="totalInteractions"></p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-red-500">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="stat-text">
+                            <h3>Open Issues</h3>
+                            <p id="openIssues"></p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-yellow-500">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        </div>
+                        <div class="stat-text">
+                            <h3>In Progress</h3>
+                            <p id="inProgress"></p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green-500">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="stat-text">
+                            <h3>Resolved</h3>
+                            <p id="resolved"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Actions</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button class="quick-action-btn" onclick="switchView('interactions')">
+                            View Interactions
+                        </button>
+                        <button class="quick-action-btn" onclick="switchView('guests')">
+                            Manage Guests
+                        </button>
+                        <button class="quick-action-btn" onclick="switchView('messages')">
+                            Messages
+                        </button>
+                    </div>
+                    <button class="btn-primary flex items-center gap-2 mt-8 mx-auto" onclick="generateDailySummary()">
+                        ✨ Generate Daily Summary
+                    </button>
+                </div>
+            </section>
+
+            <!-- Log Interaction View -->
+            <section id="log-interaction-view" class="view hidden">
+                <div class="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto">
+                    <h2 class="text-2xl font-semibold mb-4 border-b pb-3">Add New Log Entry</h2>
+                    <form id="logForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Agent Name</label>
+                            <input type="text" id="agentNameInput" readonly 
+                                   class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Guest Name (Optional)</label>
+                            <input type="text" id="guestNameInput" placeholder="Enter guest name"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Room Number</label>
+                            <input type="text" id="roomNumberInput" placeholder="e.g., 205"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Category</label>
+                            <select id="categoryInput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2">
+                                <option>General</option>
+                                <option>Complaint</option>
+                                <option>Compliment</option>
+                                <option>Maintenance</option>
+                                <option>Security</option>
+                                <option>Request</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea id="descriptionInput" rows="5" placeholder="Describe the interaction..."
+                                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2"></textarea>
+                        </div>
+                        <button type="submit" class="w-full btn-primary">
+                            Submit Log
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Interactions View -->
+            <section id="interactions-view" class="view hidden">
+                <div class="mb-4 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
+                    <h2 id="interactionsHeader" class="text-xl font-bold"></h2>
+                    <div class="flex gap-2">
+                        <select id="filterCategory" class="rounded-md border-gray-300 text-sm">
+                            <option value="all">All Categories</option>
+                            <option value="General">General</option>
+                            <option value="Complaint">Complaint</option>
+                            <option value="Compliment">Compliment</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Security">Security</option>
+                            <option value="Request">Request</option>
+                        </select>
+                        <button class="btn-primary" onclick="switchView('log-interaction')">Add New</button>
+                    </div>
+                </div>
+                
+                <div id="interactionList" class="space-y-4">
+                    <p class="text-center text-gray-500">No interactions logged for this day.</p>
+                </div>
+            </section>
+
+            <!-- Guests View -->
+            <section id="guests-view" class="view hidden">
+                <div class="mb-4 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
+                    <input type="text" id="guestSearch" placeholder="Search guests..." 
+                           class="rounded-md border-gray-300 flex-1 mr-4 p-2">
+                    <button id="addGuestBtn" class="btn-primary">Add Guest</button>
+                </div>
+                
+                <div id="guestList" class="space-y-4">
+                    <p class="text-center text-gray-500">No guests found.</p>
+                </div>
+            </section>
+
+            <!-- Messages View -->
+            <section id="messages-view" class="view hidden">
+                <div class="bg-white rounded-xl shadow-md h-96 flex flex-col">
+                    <div class="p-4 border-b">
+                        <h3 class="text-lg font-semibold">Staff Messages</h3>
+                        <p class="text-sm text-gray-500">Internal communication for front desk staff</p>
+                    </div>
+                    <div id="messageList" class="flex-1 p-4 overflow-y-auto space-y-4">
+                        <p class="text-center text-gray-500">No messages yet.</p>
+                    </div>
+                    <div class="p-4 border-t">
+                        <div class="flex gap-2">
+                            <input type="text" id="messageInput" placeholder="Type your message..." 
+                                   class="flex-1 rounded-md border-gray-300 focus:ring-accent-blue focus:border-accent-blue p-2">
+                            <button id="sendMessageBtn" class="btn-primary">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Floor Plans View -->
+            <section id="floor-plans-view" class="view hidden">
+                <div class="bg-white p-6 rounded-xl shadow-md max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-semibold mb-4 border-b pb-3 text-center">Hotel Floor Plans</h2>
+                    <div class="flex justify-center mb-4 space-x-2">
+                        <button class="floor-plan-btn bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg" data-floor="lobby">Lobby</button>
+                        <button class="floor-plan-btn bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg" data-floor="floor2">Floor 2</button>
+                        <button class="floor-plan-btn bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg" data-floor="floor3">Floor 3</button>
+                    </div>
+                    <div id="floor-plan-display" class="w-full">
+                        <!-- SVG content will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cheat Sheet View -->
+            <section id="cheat-sheet-view" class="view hidden">
+                <div class="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto">
+                    <h2 class="text-2xl font-semibold mb-4 border-b pb-3">Front Desk Cheat Sheet</h2>
+                    <input type="text" id="cheatSheetSearch" placeholder="Search for answers (e.g., 'Plaza' or 'events')..." 
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2 mb-4">
+                    <div id="cheatSheetList" class="space-y-4">
+                        <p class="text-center text-gray-500">Start typing to search for answers.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for Daily Summary & Guest Form -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div id="modalContent" class="modal-content">
+            <div id="summaryModal" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">Daily Summary</h3>
+                    <button class="text-gray-500 hover:text-gray-700" onclick="closeModal()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div id="summaryText" class="text-gray-700 space-y-4">
+                    <p>Generating summary...</p>
+                </div>
+            </div>
+            
+            <div id="guestModal" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="guestModalTitle" class="text-2xl font-bold text-gray-800">Add Guest</h3>
+                    <button class="text-gray-500 hover:text-gray-700" onclick="closeModal()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <form id="guestForm" class="space-y-4">
+                    <input type="hidden" id="guestIdInput">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Guest Name</label>
+                        <input type="text" id="guestNameForm" placeholder="e.g., Jane Doe" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Room Number</label>
+                        <input type="text" id="roomNumberForm" placeholder="e.g., 205"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Contact (Optional)</label>
+                        <input type="text" id="contactForm" placeholder="e.g., 555-123-4567"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+                        <textarea id="notesForm" rows="3" placeholder="e.g., Frequent guest, prefers quiet rooms"
+                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-accent-blue focus:border-accent-blue p-2"></textarea>
+                    </div>
+                    <button type="submit" class="w-full btn-primary">
+                        Save Guest
+                    </button>
+                </form>
+            </div>
+            
+            <div id="confirmModal" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">Confirm Deletion</h3>
+                    <button class="text-gray-500 hover:text-gray-700" onclick="closeModal()">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <p class="text-gray-700 mb-4">Are you sure you want to delete this guest profile?</p>
+                <div class="flex justify-end space-x-4">
+                    <button class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300" onclick="closeModal()">Cancel</button>
+                    <button id="confirmDeleteBtn" class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, serverTimestamp, addDoc, getDocs, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Variables and Constants
+        const agentName = 'HUGO CHAVEZ';
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalContent = document.getElementById('modalContent');
+        let currentDeleteGuestId = null;
+        let currentDailyLogs = [];
+
+        // Date variables
+        let currentDate = new Date();
+        const formatter = new Intl.DateTimeFormat('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Firebase Initialization and Authentication
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        setLogLevel('debug');
+        
+        let userId = null;
+        let isAuthReady = false;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+            } else {
+                try {
+                    if (initialAuthToken) {
+                        const userCredential = await signInWithCustomToken(auth, initialAuthToken);
+                        userId = userCredential.user.uid;
+                    } else {
+                        const userCredential = await signInAnonymously(auth);
+                        userId = userCredential.user.uid;
+                    }
+                } catch (error) {
+                    console.error("Authentication failed:", error);
+                    return;
+                }
+            }
+            isAuthReady = true;
+            document.getElementById('userIdDisplay').textContent = `User ID: ${userId}`;
+            initApp();
+        });
+        
+        // UI State Management
+        window.switchView = function(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            const view = document.getElementById(`${viewName}-view`);
+            if (view) view.classList.remove('hidden');
+            
+            let title = viewName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            if(viewName === 'log-interaction') title = 'Log Interaction';
+            document.getElementById('header-title').textContent = title;
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.toggle('active', link.dataset.view === viewName || (viewName === 'log-interaction' && link.dataset.view === 'interactions'));
+            });
+            
+            if (window.innerWidth < 768) { // md breakpoint
+                toggleSidebar(false);
+            }
+        }
+        
+        window.toggleSidebar = function(force) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isHidden = sidebar.classList.contains('-translate-x-full');
+            
+            if (force === true) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.add('active');
+            } else if (force === false) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('active');
+            }
+        }
+        
+        // Modal functions
+        window.showModal = function(modalId) {
+            const modals = ['summaryModal', 'guestModal', 'confirmModal'];
+            modals.forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(modalId).classList.remove('hidden');
+            modalOverlay.classList.add('open');
+        }
+        
+        window.closeModal = function() {
+            modalOverlay.classList.remove('open');
+        }
+
+        // Fetch Functions
+        async function fetchInteractions(date) {
+            if (!isAuthReady || !userId) return;
+
+            document.getElementById('interactionsHeader').textContent = formatter.format(date);
+            document.getElementById('currentDate').textContent = formatter.format(date);
+
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+            
+            const logsRef = collection(db, `artifacts/${appId}/public/data/logs`);
+            const q = query(logsRef, where('timestamp', '>=', startOfDay), where('timestamp', '<=', endOfDay));
+            
+            onSnapshot(q, (snapshot) => {
+                currentDailyLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderInteractions();
+                updateDashboardStats(currentDailyLogs);
+            }, (error) => {
+                console.error("Error fetching interactions:", error);
+            });
+        }
+        
+        function fetchGuests() {
+            if (!isAuthReady || !userId) return;
+            const guestsRef = collection(db, `artifacts/${appId}/public/data/guests`);
+            
+            onSnapshot(guestsRef, (snapshot) => {
+                const guests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderGuests(guests);
+            }, (error) => {
+                console.error("Error fetching guests:", error);
+            });
+        }
+
+        function fetchMessages() {
+            if (!isAuthReady || !userId) return;
+
+            const messagesRef = collection(db, `artifacts/${appId}/public/data/messages`);
+            const q = query(messagesRef);
+
+            onSnapshot(q, (snapshot) => {
+                const messages = snapshot.docs.map(doc => doc.data());
+                messages.sort((a, b) => {
+                    const timeA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime() : 0;
+                    const timeB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime() : 0;
+                    return timeA - timeB;
+                });
+                renderMessages(messages);
+            }, (error) => {
+                console.error("Error fetching messages:", error);
+            });
+        }
+        
+        // Render Functions
+        function renderInteractions() {
+            const list = document.getElementById('interactionList');
+            const filterValue = document.getElementById('filterCategory').value;
+
+            const filteredLogs = (filterValue === 'all')
+                ? currentDailyLogs
+                : currentDailyLogs.filter(log => log.category === filterValue);
+
+            filteredLogs.sort((a, b) => {
+                const timeA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime() : 0;
+                const timeB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime() : 0;
+                return timeB - timeA; // Sort newest first
+            });
+            
+            list.innerHTML = '';
+            if (filteredLogs.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500">No interactions logged for this day matching the filter.</p>';
+                return;
+            }
+            filteredLogs.forEach(log => {
+                const timestamp = log.timestamp && log.timestamp.toDate ? log.timestamp.toDate() : new Date();
+                const timeString = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                
+                const logCard = document.createElement('div');
+                logCard.className = 'log-card';
+                logCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="status-badge status-${log.status.toLowerCase().replace(' ', '_')}">${log.status}</span>
+                            <span class="text-sm text-gray-500">${log.category}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">${timeString}</span>
+                    </div>
+                    <div class="mb-2">
+                        <p class="font-medium">${log.guestName || 'N/A'} - Room ${log.roomNumber || 'N/A'}</p>
+                        <p class="text-gray-700">${log.description}</p>
+                    </div>
+                    <div class="flex justify-between items-center text-sm text-gray-500">
+                        <span>Logged by: ${log.agentName}</span>
+                        <div class="flex gap-2">
+                            ${log.status !== 'Resolved' ? `
+                                ${log.status === 'New' ? `<button class="text-yellow-600 hover:text-yellow-800" onclick="updateInteractionStatus('${log.id}', 'In Progress')">In Progress</button>` : ''}
+                                <button class="text-green-600 hover:text-green-800" onclick="updateInteractionStatus('${log.id}', 'Resolved')">Resolve</button>
+                            ` : '<span class="text-green-600">Completed</span>'}
+                        </div>
+                    </div>
+                `;
+                list.appendChild(logCard);
+            });
+        }
+
+        function renderGuests(guests) {
+            const list = document.getElementById('guestList');
+            list.innerHTML = '';
+            if (guests.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500">No guests found.</p>';
+                return;
+            }
+            guests.forEach(guest => {
+                const guestCard = document.createElement('div');
+                guestCard.className = 'border rounded-lg p-4 flex justify-between items-center bg-white shadow-sm';
+                guestCard.innerHTML = `
+                    <div>
+                        <p class="font-bold">${guest.guestName} <span class="font-normal text-gray-500">- Room ${guest.roomNumber}</span></p>
+                        ${guest.contact ? `<p class="text-sm text-gray-600">${guest.contact}</p>` : ''}
+                        ${guest.notes ? `<p class="text-sm text-gray-500 mt-1">${guest.notes}</p>` : ''}
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="edit-guest-btn text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-md" data-id="${guest.id}">Edit</button>
+                        <button class="delete-guest-btn text-sm bg-red-500 text-white hover:bg-red-600 px-3 py-1 rounded-md" data-id="${guest.id}">Delete</button>
+                    </div>
+                `;
+                list.appendChild(guestCard);
+            });
+        }
+
+        function renderMessages(messages) {
+            const list = document.getElementById('messageList');
+            list.innerHTML = '';
+            if (messages.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500">No messages yet.</p>';
+                return;
+            }
+            messages.forEach(msg => {
+                const messageCard = document.createElement('div');
+                const isUserMessage = msg.agentName === agentName;
+                const alignment = isUserMessage ? 'justify-end' : 'justify-start';
+                const color = isUserMessage ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800';
+                const rounded = isUserMessage ? 'rounded-br-none' : 'rounded-bl-none';
+                
+                const timeString = msg.timestamp && msg.timestamp.toDate 
+                    ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                    : 'Sending...';
+
+                messageCard.className = `flex ${alignment}`;
+                messageCard.innerHTML = `
+                    <div class="max-w-xs">
+                        <div class="px-4 py-2 rounded-lg inline-block ${rounded} ${color}">
+                            ${msg.text}
+                        </div>
+                        <p class="text-xs mt-1 text-gray-500 ${isUserMessage ? 'text-right' : 'text-left'}">${msg.agentName} - ${timeString}</p>
+                    </div>
+                `;
+                list.appendChild(messageCard);
+                list.scrollTop = list.scrollHeight;
+            });
+        }
+        
+        function updateDashboardStats(logs) {
+            const total = logs.length;
+            const open = logs.filter(log => log.status === 'New').length;
+            const inProgress = logs.filter(log => log.status === 'In Progress').length;
+            const resolved = logs.filter(log => log.status === 'Resolved').length;
+            
+            document.getElementById('totalInteractions').textContent = total;
+            document.getElementById('openIssues').textContent = open;
+            document.getElementById('inProgress').textContent = inProgress;
+            document.getElementById('resolved').textContent = resolved;
+        }
+
+        // Event Handlers
+        async function logInteraction(event) {
+            event.preventDefault();
+            const log = {
+                agentName: document.getElementById('agentNameInput').value,
+                guestName: document.getElementById('guestNameInput').value,
+                roomNumber: document.getElementById('roomNumberInput').value,
+                category: document.getElementById('categoryInput').value,
+                description: document.getElementById('descriptionInput').value,
+                timestamp: serverTimestamp(),
+                status: 'New'
+            };
+            
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/public/data/logs`), log);
+                document.getElementById('logForm').reset();
+                document.getElementById('agentNameInput').value = agentName;
+                switchView('interactions');
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        }
+        
+        window.updateInteractionStatus = async function(id, newStatus) {
+            try {
+                await setDoc(doc(db, `artifacts/${appId}/public/data/logs`, id), {
+                    status: newStatus
+                }, { merge: true });
+            } catch (e) {
+                console.error("Error updating status: ", e);
+            }
+        }
+
+        async function saveGuest(event) {
+            event.preventDefault();
+            const guestId = document.getElementById('guestIdInput').value;
+            const guestData = {
+                guestName: document.getElementById('guestNameForm').value,
+                roomNumber: document.getElementById('roomNumberForm').value,
+                contact: document.getElementById('contactForm').value,
+                notes: document.getElementById('notesForm').value,
+                lastUpdated: serverTimestamp()
+            };
+            try {
+                if (guestId) {
+                    await setDoc(doc(db, `artifacts/${appId}/public/data/guests`, guestId), guestData, { merge: true });
+                } else {
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/guests`), guestData);
+                }
+                closeModal();
+            } catch (e) {
+                console.error("Error saving guest: ", e);
+            }
+        }
+
+        function deleteGuest(id) {
+            currentDeleteGuestId = id;
+            showModal('confirmModal');
+        }
+
+        async function confirmDeleteGuest() {
+            if (currentDeleteGuestId) {
+                try {
+                    await deleteDoc(doc(db, `artifacts/${appId}/public/data/guests`, currentDeleteGuestId));
+                    closeModal();
+                    currentDeleteGuestId = null;
+                } catch (e) {
+                    console.error("Error deleting guest: ", e);
+                }
+            }
+        }
+        
+        async function sendMessage(event) {
+            event.preventDefault();
+            const messageInput = document.getElementById('messageInput');
+            const text = messageInput.value.trim();
+            if (text === '') return;
+
+            const message = {
+                agentName: agentName,
+                text: text,
+                timestamp: serverTimestamp()
+            };
+
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/public/data/messages`), message);
+                messageInput.value = '';
+            } catch (e) {
+                console.error("Error sending message: ", e);
+            }
+        }
+        
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) return response.json();
+                    if (response.status < 500 && response.status !== 429) {
+                         console.error(`Request failed with status ${response.status}. Not retrying.`);
+                         return response.json();
+                    }
+                } catch (error) {
+                    console.warn(`Attempt ${i + 1} of ${maxRetries} failed:`, error);
+                }
+                const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+            throw new Error('Failed to fetch from API after multiple retries.');
+        }
+
+        window.generateDailySummary = async function() {
+            showModal('summaryModal');
+            document.getElementById('summaryText').innerHTML = `<p class="text-center">Generating summary...</p>`;
+            
+            try {
+                const startOfDay = new Date();
+                startOfDay.setHours(0, 0, 0, 0);
+                const endOfDay = new Date();
+                endOfDay.setHours(23, 59, 59, 999);
+
+                const logsRef = collection(db, `artifacts/${appId}/public/data/logs`);
+                const q = query(logsRef, where('timestamp', '>=', startOfDay), where('timestamp', '<=', endOfDay));
+
+                const snapshot = await getDocs(q);
+                const logs = snapshot.docs.map(d => {
+                    const data = d.data();
+                    if (data.timestamp && data.timestamp.toDate) {
+                        data.timestamp = data.timestamp.toDate().toISOString();
+                    }
+                    return data;
+                });
+
+                if (logs.length === 0) {
+                    document.getElementById('summaryText').innerHTML = `<p>No interactions were logged today to generate a summary.</p>`;
+                    return;
+                }
+
+                const prompt = `You are a helpful assistant for the front desk of the Hampton by Hilton in Kansas City, Missouri. Analyze the following daily interaction logs and provide a concise, single-paragraph summary of key findings, issues, and notable events. Conclude with a list of actionable recommendations for the staff. The data is a JSON array.
+
+                Logs: ${JSON.stringify(logs, null, 2)}
+                `;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: {
+                        parts: [{ text: "Act as a world-class hotel manager. Provide a concise, single-paragraph summary of the key findings, followed by a bulleted list of actionable recommendations." }]
+                    }
+                };
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`;
+                const result = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    document.getElementById('summaryText').innerHTML = text.replace(/\n/g, '<br>').replace(/\*/g, '• ');
+                } else {
+                    document.getElementById('summaryText').innerHTML = `<p class="text-red-500">Failed to generate summary. The API response was empty or malformed.</p>`;
+                    console.error("API response was not as expected:", result);
+                }
+
+            } catch (error) {
+                console.error("Error in generateDailySummary:", error);
+                document.getElementById('summaryText').innerHTML = `<p class="text-red-500">An error occurred while generating the summary. Check the console for details.</p>`;
+            }
+        }
+
+        function navigateDay(direction) {
+            currentDate.setDate(currentDate.getDate() + direction);
+            fetchInteractions(new Date(currentDate));
+        }
+
+        // SVG rendering functions
+        function renderFloorPlan(floor) {
+            const container = document.getElementById('floor-plan-display');
+            let svgContent = '';
+
+            const createRoom = (id, x, y, width, height, textX, textY, textRotation) => {
+                const rotationTransform = textRotation ? `rotate(${textRotation}, ${textX}, ${textY})` : '';
+                return `
+                    <g class="room-group cursor-pointer" onclick="prefillRoom('${id}')">
+                        <rect x="${x}" y="${y}" width="${width}" height="${height}" 
+                              class="fill-gray-100 stroke-gray-400 stroke-2 hover:fill-blue-200 transition-colors duration-200" />
+                        <text x="${textX}" y="${textY}" class="text-xs font-semibold text-gray-800 pointer-events-none" 
+                              transform="${rotationTransform}">${id}</text>
+                    </g>
+                `;
+            };
+
+            if (floor === 'lobby') {
+                svgContent = `
+                    <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
+                        <rect x="0" y="0" width="400" height="600" class="fill-white stroke-gray-800 stroke-4" />
+                        <!-- Common Areas -->
+                        <rect x="100" y="10" width="280" height="150" class="fill-gray-200 stroke-gray-400 stroke-2" />
+                        <text x="240" y="85" text-anchor="middle" class="text-lg font-bold">Lobby</text>
+                        <rect x="180" y="160" width="100" height="100" class="fill-gray-200 stroke-gray-400 stroke-2" />
+                        <text x="230" y="210" text-anchor="middle" class="text-xs font-bold">Lounge</text>
+                        
+                        <!-- Front Desk -->
+                        <g onclick="prefillRoom('Front Desk')">
+                            <rect x="290" y="200" width="80" height="40" class="fill-blue-100 stroke-blue-500 stroke-2 cursor-pointer" />
+                            <text x="330" y="225" text-anchor="middle" class="text-xs font-semibold text-blue-800">Front Desk</text>
+                        </g>
+
+                        <!-- Rooms -->
+                        ${createRoom('101', 280, 20, 100, 100, 330, 70)}
+                        ${createRoom('102', 170, 20, 100, 100, 220, 70)}
+                        ${createRoom('103', 10, 20, 150, 80, 85, 60)}
+                        ${createRoom('104', 10, 110, 150, 100, 85, 160)}
+                        
+                        <!-- Restrooms and Stairs -->
+                        <g class="fill-gray-300 stroke-gray-500 stroke-2">
+                            <rect x="290" y="120" width="40" height="40" />
+                            <rect x="340" y="120" width="40" height="40" />
+                        </g>
+                        <text x="310" y="145" text-anchor="middle" class="text-xs">&#x2642;</text>
+                        <text x="360" y="145" text-anchor="middle" class="text-xs">&#x2640;</text>
+                        
+                        <rect x="120" y="400" width="60" height="80" class="fill-gray-300 stroke-gray-500 stroke-2" />
+                        <text x="150" y="440" text-anchor="middle" class="text-xs">Stairs</text>
+
+                        <!-- Bar & Breakfast area -->
+                        <rect x="10" y="220" width="150" height="150" class="fill-gray-200 stroke-gray-400 stroke-2" />
+                        <text x="85" y="295" text-anchor="middle" class="text-xs">Bar</text>
+                        <rect x="10" y="380" width="150" height="200" class="fill-gray-200 stroke-gray-400 stroke-2" />
+                        <text x="85" y="480" text-anchor="middle" class="text-xs">Breakfast</text>
+                    </svg>
+                `;
+            } else if (floor === 'floor2') {
+                svgContent = `
+                    <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
+                        <rect x="0" y="0" width="400" height="600" class="fill-white stroke-gray-800 stroke-4" />
+                        
+                        <!-- Rooms -->
+                        ${createRoom('201', 200, 10, 80, 100, 240, 60)}
+                        ${createRoom('202', 285, 10, 100, 120, 335, 70)}
+                        ${createRoom('203', 285, 140, 100, 150, 335, 215)}
+                        ${createRoom('204', 285, 300, 100, 150, 335, 375)}
+                        ${createRoom('205', 285, 460, 100, 100, 335, 510)}
+
+                        ${createRoom('213', 10, 10, 100, 100, 60, 60)}
+                        ${createRoom('212', 10, 120, 100, 100, 60, 170)}
+                        ${createRoom('211', 10, 230, 100, 100, 60, 280)}
+                        ${createRoom('210', 10, 340, 100, 100, 60, 390)}
+                        ${createRoom('209', 10, 450, 100, 100, 60, 500)}
+
+                        ${createRoom('208', 115, 460, 160, 100, 195, 510)}
+
+                        <!-- Elevators -->
+                        <g class="fill-gray-400 stroke-gray-600 stroke-2">
+                            <rect x="120" y="120" width="70" height="50" />
+                            <text x="155" y="145" text-anchor="middle" class="text-xs font-bold">Elevator</text>
+                        </g>
+
+                        <!-- Stairs -->
+                        <rect x="120" y="560" width="60" height="40" class="fill-gray-300 stroke-gray-500 stroke-2" />
+                        <text x="150" y="580" text-anchor="middle" class="text-xs">Stairs</text>
+                    </svg>
+                `;
+            } else if (floor === 'floor3') {
+                svgContent = `
+                    <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
+                        <rect x="0" y="0" width="400" height="600" class="fill-white stroke-gray-800 stroke-4" />
+                        
+                        <!-- Rooms -->
+                        ${createRoom('301', 200, 10, 80, 100, 240, 60)}
+                        ${createRoom('302', 285, 10, 100, 120, 335, 70)}
+                        ${createRoom('303', 285, 140, 100, 150, 335, 215)}
+                        ${createRoom('304', 285, 300, 100, 150, 335, 375)}
+                        ${createRoom('305', 285, 460, 100, 100, 335, 510)}
+
+                        ${createRoom('313', 10, 10, 100, 100, 60, 60)}
+                        ${createRoom('312', 10, 120, 100, 100, 60, 170)}
+                        ${createRoom('311', 10, 230, 100, 100, 60, 280)}
+                        ${createRoom('310', 10, 340, 100, 100, 60, 390)}
+                        ${createRoom('309', 10, 450, 100, 100, 60, 500)}
+
+                        ${createRoom('308', 115, 460, 160, 100, 195, 510)}
+
+                        <!-- Elevators -->
+                        <g class="fill-gray-400 stroke-gray-600 stroke-2">
+                            <rect x="120" y="120" width="70" height="50" />
+                            <text x="155" y="145" text-anchor="middle" class="text-xs font-bold">Elevator</text>
+                        </g>
+
+                        <!-- Stairs -->
+                        <rect x="120" y="560" width="60" height="40" class="fill-gray-300 stroke-gray-500 stroke-2" />
+                        <text x="150" y="580" text-anchor="middle" class="text-xs">Stairs</text>
+                    </svg>
+                `;
+            }
+
+            container.innerHTML = svgContent;
+        }
+
+        window.prefillRoom = function(roomNumber) {
+            document.getElementById('roomNumberInput').value = roomNumber;
+            switchView('log-interaction');
+        }
+        
+        // Cheat Sheet Logic
+        const cheatSheetData = [
+            {
+                title: 'Kansas City Plaza Directions',
+                keywords: 'plaza, directions, country club, shopping',
+                content: `The Country Club Plaza is about a 15-minute drive from the hotel. The fastest way to get there is by taking Main Street south. It's a great place for upscale shopping and dining. You can also take the KC Streetcar for free, which has a stop near the hotel and takes you directly downtown.`
+            },
+            {
+                title: 'Power & Light District Directions',
+                keywords: 'power and light, p&l, downtown, entertainment',
+                content: `The Power & Light District is our city's premier entertainment hub, about 10 minutes away by car. To get there, you can take a ride-share or, for a more local experience, the free KC Streetcar. Just head to the nearest streetcar stop and it will take you right into the heart of the district.`
+            },
+            {
+                title: 'Local Attractions & Museums',
+                keywords: 'museums, attractions, what to do, fun',
+                content: `Kansas City has many fantastic attractions! We highly recommend the National WWI Museum at Liberty Memorial, the Nelson-Atkins Museum of Art, and the interactive Science City at Union Station, especially for families. If you're looking for something unique, the American Jazz Museum in the Historic 18th & Vine District is a must-see.`
+            },
+            {
+                title: 'Upcoming Local Events',
+                keywords: 'events, concerts, what\'s happening, today, this weekend',
+                content: `This weekend, there are several exciting events happening. The Plaza Art Fair is a major highlight and a fantastic event for art lovers. There are also various concerts and sporting events downtown. For a full list of events and more details, I can show you our event brochure or you can check the Visit KC website. Also, the KC Convention Center has a busy schedule with events and conferences year-round.`
+            },
+            {
+                title: 'Breakfast Hours',
+                keywords: 'breakfast, hours, food',
+                content: `Our complimentary breakfast is served daily from 6:00 AM to 10:00 AM in the breakfast area located in the lobby on the first floor.`
+            },
+            {
+                title: 'Wi-Fi Information',
+                keywords: 'wifi, internet, password',
+                content: `Our hotel offers free Wi-Fi. You can connect to the network named "Hampton Guest." No password is required.`
+            }
+        ];
+
+        function renderCheatSheet(query = '') {
+            const list = document.getElementById('cheatSheetList');
+            list.innerHTML = '';
+            
+            const filteredData = query === '' 
+                ? cheatSheetData
+                : cheatSheetData.filter(item => {
+                    const searchString = `${item.title.toLowerCase()} ${item.keywords.toLowerCase()}`;
+                    return searchString.includes(query.toLowerCase());
+                });
+
+            if (filteredData.length === 0 && query !== '') {
+                list.innerHTML = '<p class="text-center text-gray-500">No matching entries found.</p>';
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'cheatsheet-card';
+                card.innerHTML = `
+                    <h4 class="font-bold text-lg">${item.title}</h4>
+                    <p class="text-sm text-gray-700 mt-2 hidden">${item.content}</p>
+                `;
+                card.addEventListener('click', () => {
+                    card.querySelector('p').classList.toggle('hidden');
+                });
+                list.appendChild(card);
+            });
+        }
+        
+        // Initialization
+        function initApp() {
+            if (!isAuthReady) {
+                console.log("Authentication not ready, retrying...");
+                setTimeout(initApp, 100);
+                return;
+            }
+            
+            // Set initial UI state
+            document.getElementById('agentNameInput').value = agentName;
+
+            // Add event listeners
+            document.getElementById('logForm').addEventListener('submit', logInteraction);
+            document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+            document.getElementById('addGuestBtn').addEventListener('click', () => showGuestModal());
+            document.getElementById('guestForm').addEventListener('submit', saveGuest);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteGuest);
+            document.getElementById('filterCategory').addEventListener('change', renderInteractions);
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    switchView(link.dataset.view);
+                })
+            });
+
+            document.getElementById('guestList').addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-guest-btn');
+                const deleteBtn = e.target.closest('.delete-guest-btn');
+                
+                if (editBtn) {
+                    editGuest(editBtn.dataset.id);
+                } else if (deleteBtn) {
+                    deleteGuest(deleteBtn.dataset.id);
+                }
+            });
+
+            document.getElementById('prevDayBtn').addEventListener('click', () => navigateDay(-1));
+            document.getElementById('nextDayBtn').addEventListener('click', () => navigateDay(1));
+            document.getElementById('goToTodayBtn').addEventListener('click', () => {
+                currentDate = new Date();
+                fetchInteractions(currentDate);
+            });
+            
+            document.querySelectorAll('.floor-plan-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.floor-plan-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const floor = btn.dataset.floor;
+                    renderFloorPlan(floor);
+                });
+            });
+
+            document.getElementById('cheatSheetSearch').addEventListener('input', (e) => {
+                renderCheatSheet(e.target.value);
+            });
+
+
+            // Initial data fetches and UI setup
+            fetchGuests();
+            fetchMessages();
+            fetchInteractions(currentDate);
+
+            // Render default floor plan and cheat sheet
+            renderFloorPlan('floor2');
+            document.querySelector('.floor-plan-btn[data-floor="floor2"]').classList.add('active');
+            renderCheatSheet();
+            switchView('dashboard');
+        }
+
+        function showGuestModal(guestId = null, guestData = {}) {
+            document.getElementById('guestForm').reset();
+            document.getElementById('guestModalTitle').textContent = guestId ? 'Edit Guest' : 'Add Guest';
+            document.getElementById('guestIdInput').value = guestId || '';
+            document.getElementById('guestNameForm').value = guestData.guestName || '';
+            document.getElementById('roomNumberForm').value = guestData.roomNumber || '';
+            document.getElementById('contactForm').value = guestData.contact || '';
+            document.getElementById('notesForm').value = guestData.notes || '';
+            showModal('guestModal');
+        }
+
+        async function editGuest(guestId) {
+            try {
+                const guestDoc = await getDoc(doc(db, `artifacts/${appId}/public/data/guests`, guestId));
+                if (guestDoc.exists()) {
+                    showGuestModal(guestId, guestDoc.data());
+                } else {
+                    console.error("Guest not found!");
+                }
+            } catch (e) {
+                console.error("Error fetching guest data for edit:", e);
+            }
+        }
+        
+    </script>
+</body>
+</html>
+
